@@ -230,8 +230,8 @@ This example implements an **Agentic RAG system** to assist users in querying La
 import { tool, createAgent, HumanMessage } from "langchain";
 import * as z from "zod";
 
-const ALLOWED_DOMAINS = ["https://langchain-ai.github.io/"];
-const LLMS_TXT = "https://langchain-ai.github.io/langgraph/llms.txt";
+const ALLOWED_DOMAINS = ["https://docs.langchain.com/"];
+const LLMS_TXT = "https://docs.langchain.com/llms.txt";
 
 const fetchDocumentation = tool(
   async (input) => {  // [!code highlight]
@@ -367,7 +367,7 @@ This architecture is suitable for:
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/deepagents/retrieval.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

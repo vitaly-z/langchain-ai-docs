@@ -1,5 +1,7 @@
 ---
 title: Tools
+description: Define tools that let LangChain agents fetch real-time data, execute code, query external databases, and take actions.
+keywords: ["tool", "tools", "@tool", "tool calling", "custom tools"]
 ---
 
 import ToolReturnValuesPy from '/snippets/javascript/code-samples/tool-return-values-py.mdx';
@@ -75,12 +77,12 @@ Tools are most powerful when they can access runtime information like conversati
 Context provides immutable configuration data that is passed at invocation time. Use it for user IDs, session details, or application-specific settings that shouldn't change during a conversation.
 
 <Note>
-While `thread_id` (passed via `config={"configurable": {"thread_id": ...}}`) scopes the *conversation*: message history and checkpoints, `context` carries *per-run* data your tools and middleware read at invocation time. In production you typically pass both together: a stable `thread_id` per conversation, and a `context` object on every invoke.
+While `thread_id` (passed via `config={"configurable": {"thread_id": ...}}`) scopes the *conversation*: message history and checkpoints, `context` carries *per-run* data your tools and middleware read at invocation time. Persistence requires a [checkpointer](/oss/javascript/langchain/short-term-memory). In production you typically pass both a stable `thread_id` per conversation and a `context` object on every invoke.
 </Note>
 
 
 
-Tools can access an agent's runtime context through the `config` parameter. Pass `context` alongside a `thread_id` so the conversation is persisted across turns:
+Tools can access an agent's runtime context through the `config` parameter. Configure a [checkpointer](/oss/javascript/langchain/short-term-memory) and pass `context` with a stable `thread_id` so the conversation persists across invocations:
 
 <ToolRuntimeContextThreadJs />
 
@@ -763,7 +765,7 @@ Refer to the individual [chat model integration pages](/oss/javascript/integrati
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/tools.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

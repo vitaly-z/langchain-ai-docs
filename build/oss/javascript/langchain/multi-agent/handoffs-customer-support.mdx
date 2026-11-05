@@ -649,6 +649,7 @@ import { z } from "zod";
 import { tool, ToolMessage, type ToolRuntime, HumanMessage } from "langchain";
 import { Command, MemorySaver, StateSchema } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
+import { uuid7 } from "langsmith";
 
 // Define the possible workflow steps
 const SupportStepSchema = z.enum([
@@ -856,7 +857,7 @@ const agent = createAgent({
 });
 
 // Configuration for this conversation thread
-const threadId = crypto.randomUUID();
+const threadId = uuid7();
 const config = { configurable: { thread_id: threadId } };
 
 // Turn 1: Initial message - starts with warranty_collector step
@@ -919,7 +920,7 @@ for (const msg of result.messages) {
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/multi-agent/handoffs-customer-support.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

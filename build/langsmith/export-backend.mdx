@@ -41,6 +41,10 @@ The following LangSmith services expose metrics at an endpoint, in the Prometheu
 
 You can use a [Prometheus](https://prometheus.io/docs/prometheus/latest/getting_started/#configure-prometheus-to-monitor-the-sample-targets) or [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/prometheusreceiver) collector to scrape the endpoints, and export metrics to the backend of your choice.
 
+### Sandbox hosts
+
+For tabbed SmithDB and Sandbox dashboards, see [Monitor self-hosted LangSmith with Datadog or Grafana](/langsmith/self-host-observability-dashboards). The guide covers component collection settings, deployment filters, platform coverage, and compatibility.
+
 ### Frontend Nginx
 
 The frontend service exposes its Nginx metrics at the following endpoint: `langsmith-frontend.langsmith.svc.cluster.local:80/nginx_status`. You can either scrape them yourself, or bring up a [Prometheus Nginx exporter](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-nginx-exporter).
@@ -77,7 +81,7 @@ config:
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/export-backend.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

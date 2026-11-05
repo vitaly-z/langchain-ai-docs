@@ -12,7 +12,7 @@ Below, we will discuss evaluation of a few popular types of LLM applications.
 
 ![Tool use](/langsmith/images/tool-use.png)
 
-Below is a tool-calling agent in [LangGraph](https://langchain-ai.github.io/langgraph/tutorials/introduction/). The `assistant node` is an LLM that determines whether to invoke a tool based upon the input. The `tool condition` sees if a tool was selected by the `assistant node` and, if so, routes to the `tool node`. The `tool node` executes the tool and returns the output as a tool message to the `assistant node`. This loop continues as long as the `assistant node` selects a tool. If no tool is selected, then the agent directly returns the LLM response.
+Below is a tool-calling agent in [LangGraph](/oss/python/langgraph/quickstart). The `assistant node` is an LLM that determines whether to invoke a tool based upon the input. The `tool condition` sees if a tool was selected by the `assistant node` and, if so, routes to the `tool node`. The `tool node` executes the tool and returns the output as a tool message to the `assistant node`. This loop continues as long as the `assistant node` selects a tool. If no tool is selected, then the agent directly returns the LLM response.
 
 ![Agent](/langsmith/images/langgraph-agent.png)
 
@@ -138,7 +138,7 @@ If ground truth reference labels are provided, then it's common to simply define
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/evaluation-approaches.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

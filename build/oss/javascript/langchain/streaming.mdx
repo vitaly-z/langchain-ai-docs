@@ -1,6 +1,7 @@
 ---
 title: Streaming
 description: Stream real-time updates from agent runs
+keywords: ["stream", "streaming", "stream_mode", "streamMode"]
 ---
 
 import StreamingAgentProgressJs from '/snippets/javascript/code-samples/streaming-agent-progress-js.mdx';
@@ -34,7 +35,7 @@ See the [common patterns](#common-patterns) section below for additional end-to-
 
 
 
-Pass one or more of the following stream modes as a list to the [`stream`](https://reference.langchain.com/javascript/classes/_langchain_langgraph.index.CompiledStateGraph.html#stream) method:
+Pass one or more of the following stream modes as a list to the [`stream`](https://reference.langchain.com/javascript/langchain-langgraph/index/CompiledStateGraph/stream) method:
 
 
 | Mode       | Description                                                                                                 |
@@ -47,7 +48,7 @@ Pass one or more of the following stream modes as a list to the [`stream`](https
 
 
 
-To stream agent progress, use the [`stream`](https://reference.langchain.com/javascript/classes/_langchain_langgraph.index.CompiledStateGraph.html#stream) method with `streamMode: "updates"`. This emits an event after every agent step.
+To stream agent progress, use the [`stream`](https://reference.langchain.com/javascript/langchain-langgraph/index/CompiledStateGraph/stream) method with `streamMode: "updates"`. This emits an event after every agent step.
 
 
 For example, if you have an agent that calls a tool once, you should see the following updates:
@@ -294,7 +295,7 @@ See the [LangGraph streaming guide](/oss/javascript/langgraph/streaming#disable-
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/streaming.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

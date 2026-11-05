@@ -1,6 +1,7 @@
 ---
 title: Checkpointers
 description: LangGraph checkpointers save graph state as checkpoints at each step, enabling persistence, human-in-the-loop, and fault-tolerant execution.
+keywords: ["checkpoint", "checkpoints", "checkpointer", "InMemorySaver", "PostgresSaver", "persistence"]
 ---
 
 A checkpointer saves a snapshot of graph state at each super-step, organized into **threads**. Compile a graph with a checkpointer to enable human-in-the-loop workflows, time travel debugging, fault-tolerant execution, and conversational memory.
@@ -45,6 +46,26 @@ When invoking a graph with a checkpointer, you **must** specify a `thread_id` as
 A thread's current and historical state can be retrieved. To persist state, a thread must be created prior to executing a run. The LangSmith API provides several endpoints for creating and managing threads and thread state. See the [API reference](https://reference.langchain.com/python/langsmith/) for more details.
 
 The checkpointer uses `thread_id` as the primary key for storing and retrieving checkpoints. Without it, the checkpointer cannot save state or resume execution after an [interrupt](/oss/python/langgraph/interrupts), since the checkpointer uses `thread_id` to load the saved state.
+
+#### Choose how to continue a thread
+
+The `thread_id` identifies saved state. The input and `checkpoint_id` determine whether an invocation starts new work, resumes unfinished work, or replays history. Reusing a thread ID alone does not mean that execution resumes.
+
+With a checkpointer and an existing thread, choose the invocation for your goal:
+
+| Goal | Invocation | Execution |
+| --- | --- | --- |
+| Submit new input | `graph.invoke(input, config)` | Applies the input to saved state and starts from the entry point. |
+| Continue after an error | `graph.invoke(None, config)` | Loads the latest checkpoint and retries unfinished work. Omit `checkpoint_id`. |
+| Answer an `interrupt()` | `graph.invoke(Command(resume=answer), config)` | Supplies the interrupt's return value. The interrupted node starts again from its beginning. |
+| Replay history | `graph.invoke(None, snapshot.config)` | Uses a snapshot from `get_state_history()` and re-executes nodes after that checkpoint. |
+
+
+
+
+New input does not clear the thread. LangGraph applies it using the state's [reducers](/oss/python/langgraph/graph-api#reducers). Use a new `thread_id` to start with empty state.
+
+Resume returns the saved result without running nodes when the latest checkpoint has no unfinished work. For runnable examples, see [Functional API error recovery](/oss/python/langgraph/functional-api-tasks#resume-after-an-error), [resuming interrupts](/oss/python/langgraph/interrupts#resuming-interrupts), and [replaying history](/oss/python/langgraph/use-time-travel#replay).
 
 ### Checkpoints
 
@@ -160,7 +181,8 @@ StateSnapshot(
     config={'configurable': {'thread_id': '1', 'checkpoint_ns': '', 'checkpoint_id': '1ef663ba-28fe-6528-8002-5a559208592c'}},
     metadata={'source': 'loop', 'writes': {'node_b': {'foo': 'b', 'bar': ['b']}}, 'step': 2},
     created_at='2024-08-29T19:19:38.821749+00:00',
-    parent_config={'configurable': {'thread_id': '1', 'checkpoint_ns': '', 'checkpoint_id': '1ef663ba-28f9-6ec4-8001-31981c2c39f8'}}, tasks=()
+    parent_config={'configurable': {'thread_id': '1', 'checkpoint_ns': '', 'checkpoint_id': '1ef663ba-28f9-6ec4-8001-31981c2c39f8'}},
+    tasks=()
 )
 ```
 
@@ -269,6 +291,23 @@ interrupted = next(
 
 
 
+#### List every thread
+
+To see every thread a checkpointer holds state for, for example, to build an admin or debugging view, omit `thread_id` when listing checkpoints:
+
+`graph.get_state_history(config)` requires a `thread_id` in `config` and only returns history for one thread. Call `.list` on the same checkpointer you passed to `compile`, with `config=None`:
+
+```python
+# config=None returns checkpoints across every thread
+for checkpoint_tuple in checkpointer.list(None):
+    print(checkpoint_tuple.config["configurable"]["thread_id"])
+```
+
+Pass `None`, not `{}`. [`SqliteSaver`](https://reference.langchain.com/python/langgraph/checkpoints/#langgraph.checkpoint.sqlite.SqliteSaver) treats any non-`None` config as a thread filter and raises if `thread_id` is missing. For async graphs, use `.alist(None)` instead. This works with [`InMemorySaver`](https://reference.langchain.com/python/langgraph/checkpoints/#langgraph.checkpoint.memory.InMemorySaver), [`SqliteSaver`](https://reference.langchain.com/python/langgraph/checkpoints/#langgraph.checkpoint.sqlite.SqliteSaver), and [`PostgresSaver`](https://reference.langchain.com/python/langgraph/checkpoints/#langgraph.checkpoint.postgres.PostgresSaver). `.list` still returns one row per checkpoint, not per thread, so group by `thread_id` yourself to build a thread list.
+
+
+
+
 ### Replay
 
 Replay re-executes steps from a prior checkpoint. Invoke the graph with a prior `checkpoint_id` to re-run nodes after that checkpoint. Nodes before the checkpoint are skipped (their results are already saved). Nodes after the checkpoint re-execute, including any LLM calls, API requests, or [interrupts](/oss/python/langgraph/interrupts) — which are always re-triggered during replay.
@@ -306,7 +345,30 @@ The durability modes, from least to most durable, are as follows:
 
 * `"exit"`: LangGraph persists changes only when graph execution exits — successfully, with an error, or due to a human-in-the-loop interrupt. This provides the best performance for long-running graphs but means intermediate state is not saved, so you cannot recover from system failures (like process crashes) mid-execution.
 * `"async"`: LangGraph persists changes asynchronously while the next step executes. This provides good performance and durability, but there is a small risk that LangGraph does not write checkpoints if the process crashes during execution.
+
 * `"sync"`: LangGraph persists changes synchronously before the next step starts. This ensures that LangGraph writes every checkpoint before continuing execution, providing high durability at the cost of some performance overhead.
+
+
+
+
+### First durable checkpoint on a new thread
+
+For a new thread, the durability mode also determines which checkpoints are committed before the first user node executes. The internal `__start__` superstep runs first; step `0` is the loop checkpoint written after that superstep.
+
+* `"exit"`: No checkpoint exists until the run ends. A crash during the run leaves no record of the thread.
+* `"async"`: LangGraph starts writing the input checkpoint before the first user node executes, but does not wait for the write to finish. The first user node can run before any checkpoint is committed.
+
+* `"sync"`: LangGraph commits the input checkpoint (step `-1`) and the step `0` checkpoint before the first user node executes.
+
+
+
+
+<Warning>
+In every mode, a crash before the first checkpoint becomes durable leaves the thread indistinguishable from a thread that was never invoked: `get_tuple()` returns `None` in both cases, and `invoke(None, config)` raises `EmptyInputError`. If you need to distinguish "never accepted" from "accepted but lost", record admission outside the checkpointer, for example by committing an outbox row to your own store before you call `invoke`.
+</Warning>
+
+
+
 
 ## Optimize checkpoint storage
 
@@ -343,7 +405,7 @@ Each checkpointer conforms to [`BaseCheckpointSaver`](https://reference.langchai
 * `.put` - Store a checkpoint with its configuration and metadata.
 * `.put_writes` - Store intermediate writes linked to a checkpoint (i.e. [pending writes](#pending-writes)).
 * `.get_tuple` - Fetch a checkpoint tuple using for a given configuration (`thread_id` and `checkpoint_id`). This is used to populate `StateSnapshot` in `graph.get_state()`.
-* `.list` - List checkpoints that match a given configuration and filter criteria. This is used to populate state history in `graph.get_state_history()`
+* `.list` - List checkpoints that match a given configuration and filter criteria. This is used to populate state history in `graph.get_state_history()`. Pass `config=None` to list checkpoints across every thread. See [List every thread](#list-every-thread).
 
 If the checkpointer is used with asynchronous graph execution (i.e. executing the graph via `.ainvoke`, `.astream`, `.abatch`), asynchronous versions of the above methods will be used (`.aput`, `.aput_writes`, `.aget_tuple`, `.alist`).
 
@@ -847,7 +909,7 @@ The suite auto-detects which extended capabilities your checkpointer implements 
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langgraph/checkpointers.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

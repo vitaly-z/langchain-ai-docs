@@ -57,7 +57,15 @@ which will output the count of daily traces by workspace ID and organization ID.
 
 ## Export usage data
 
-All export methods produce the same data: LangSmith trace counts, LangSmith Deployments node usage, and Fleet run counts across all workspaces and organizations.
+The UI and API exports cover all workspaces and organizations, with usage for:
+
+- LangSmith traces
+- LangSmith Deployments
+- Fleet (Agent Builder)
+- Usage snapshots (daily entity counts)
+- Sandboxes
+- LangSmith Engine
+- LangSmith LLM Gateway
 
 <Note>
 The UI and API exports require both of the following:
@@ -89,7 +97,7 @@ curl -OJ \
 
 ### Export via SQL scripts
 
-You can also run SQL scripts directly against your PostgreSQL database to export usage data. This requires database access credentials — no application-level permissions apply.
+You can also run SQL scripts directly against your PostgreSQL database to export trace, node, Fleet, and usage snapshot data. This requires database access credentials. No application-level permissions apply.
 
 To export trace usage (requires Helm chart version 0.11.4 or later):
 
@@ -127,7 +135,7 @@ sh run_support_query_pg.sh <postgres_url> \
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/script-running-pg-support-queries.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

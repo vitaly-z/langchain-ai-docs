@@ -51,7 +51,7 @@ modal_sandbox = modal.Sandbox.create(app=app)
 backend = ModalSandbox(sandbox=modal_sandbox)
 
 agent = create_deep_agent(
-    model=ChatAnthropic(model="claude-sonnet-4-20250514"),
+    model=ChatAnthropic(model="claude-sonnet-4-6"),
     system_prompt="You are a coding assistant with sandbox access.",
     backend=backend,
 )
@@ -72,7 +72,7 @@ See also: [Sandboxes](/oss/python/deepagents/sandboxes).
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/sandboxes/modal.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

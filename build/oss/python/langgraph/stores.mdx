@@ -52,7 +52,7 @@ namespace_for_memory = (user_id, "memories")
 Use the `store.put` method to save memories to the namespace in the store. Specify the namespace, as defined above, and a key-value pair for the memory: the key is simply a unique identifier for the memory (`memory_id`) and the value (a dictionary) is the memory itself.
 
 ```python
-memory_id = str(uuid.uuid4())
+memory_id = str(uuid7())
 memory = {"food_preference" : "I like pizza"}
 store.put(namespace_for_memory, memory_id, memory)
 ```
@@ -72,7 +72,7 @@ memories[-1].dict()
  'updated_at': '2024-10-02T17:22:31.590605+00:00'}
 ```
 
-Each memory type is a Python class ([`Item`](https://langchain-ai.github.io/langgraph/reference/store/#langgraph.store.base.Item)) with certain attributes. We can access it as a dictionary by converting with `.dict`.
+Each memory type is a Python class ([`Item`](https://reference.langchain.com/python/langgraph.store/base/Item)) with certain attributes. We can access it as a dictionary by converting with `.dict`.
 
 The attributes it has are:
 
@@ -93,7 +93,7 @@ The attributes it has are:
 
 ## Listing items in a namespace
 
-Calling [`store.search`](https://reference.langchain.com/python/langgraph/store/#langgraph.store.base.BaseStore.search) (or the async [`store.asearch`](https://reference.langchain.com/python/langgraph/store/#langgraph.store.base.BaseStore.asearch)) with no `query` and no `filter` returns the items stored under `namespace_prefix`, up to `limit`. Use this to enumerate everything in a namespace when you don't need semantic ranking.
+Calling [`store.search`](https://reference.langchain.com/python/langgraph/store) (or the async [`store.asearch`](https://reference.langchain.com/python/langgraph/store)) with no `query` and no `filter` returns the items stored under `namespace_prefix`, up to `limit`. Use this to enumerate everything in a namespace when you don't need semantic ranking.
 
 
 
@@ -118,7 +118,7 @@ To page through a large namespace:
 
 
 
-To discover which namespaces exist (for example, to iterate over every user before listing their memories), use [`store.list_namespaces`](https://reference.langchain.com/python/langgraph/store/#langgraph.store.base.BaseStore.list_namespaces) or [`store.alist_namespaces`](https://reference.langchain.com/python/langgraph/store/#langgraph.store.base.BaseStore.alist_namespaces):
+To discover which namespaces exist (for example, to iterate over every user before listing their memories), use [`store.list_namespaces`](https://reference.langchain.com/python/langgraph/store) or [`store.alist_namespaces`](https://reference.langchain.com/python/langgraph/store):
 
 <StoreListNamespaceListPy />
 
@@ -166,7 +166,7 @@ You can control which parts of your memories get embedded by configuring the `fi
 # Store with specific fields to embed
 store.put(
     namespace_for_memory,
-    str(uuid.uuid4()),
+    str(uuid7()),
     {
         "food_preference": "I love Italian cuisine",
         "context": "Discussing dinner plans"
@@ -177,7 +177,7 @@ store.put(
 # Store without embedding (still retrievable, but not searchable)
 store.put(
     namespace_for_memory,
-    str(uuid.uuid4()),
+    str(uuid7()),
     {"system_info": "Last updated: 2024-01-01"},
     index=False
 )
@@ -252,7 +252,7 @@ async def update_memory(state: MessagesState, runtime: Runtime[Context]):
     # ... Analyze conversation and create a new memory
 
     # Create a new memory ID
-    memory_id = str(uuid.uuid4())
+    memory_id = str(uuid7())
 
     # We create a new memory
     await runtime.store.aput(namespace, memory_id, {"memory": memory})
@@ -456,7 +456,7 @@ async def test_search_prefix(store, reference):
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langgraph/stores.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

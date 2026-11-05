@@ -2,7 +2,6 @@
 title: Migrate ClickHouse history to SmithDB
 sidebarTitle: Migrate historical data
 description: Run the historical ClickHouse-to-SmithDB migration for a self-hosted LangSmith installation.
-noindex: true
 ---
 
 Run this migration when ClickHouse history must be queryable through SmithDB. If it does not need to be, skip this page and continue with query cutover.
@@ -138,6 +137,20 @@ smithdb:
 
 Apply the chart through your normal workflow. It creates TaskDB and a one-shot migration Job that runs to completion and exits.
 
+## Pause and resume migration
+
+Suspending migration stops its pods but keeps the Job, TaskDB, and migration progress.
+
+<Note>
+Available in all 0.17 Helm charts and version 0.16.40 or later on the 0.16 line.
+</Note>
+
+Set `smithdb.migration.job.suspend: true` and apply the chart to pause. Keep `smithdb.langsmith.migration.enabled: true`. To resume from saved progress, set `smithdb.migration.job.suspend: false` and apply again.
+
+<Warning>
+Do not pause with `smithdb.langsmith.migration.enabled: false`. This removes the Job, chart-managed TaskDB, and, by default, the TaskDB PVC holding migration progress.
+</Warning>
+
 ## Wait for completion
 
 Keep SmithDB-backed queries disabled until the historical migration Job reports Kubernetes condition `Complete`.
@@ -150,7 +163,7 @@ Return to [Install LangSmith with SmithDB](/langsmith/self-host-smithdb-install#
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/self-host-smithdb-migrate.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

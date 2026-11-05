@@ -17,7 +17,7 @@ This page covers LangGraph's stream-mode API. It exposes graph execution through
 
 
 
-LangGraph graphs expose the [`stream`](https://reference.langchain.com/javascript/classes/_langchain_langgraph.pregel.Pregel.html#stream) method to yield streamed outputs as iterators.
+LangGraph graphs expose the [`stream`](https://reference.langchain.com/javascript/langchain-langgraph/pregel/Pregel/stream) method to yield streamed outputs as iterators.
 
 ```typescript
 for await (const chunk of await graph.stream(inputs, {
@@ -38,7 +38,7 @@ Debug streaming events, inspect token-by-token LLM output, and monitor latency w
 
 
 
-Pass one or more of the following stream modes as a list to the [`stream`](https://reference.langchain.com/javascript/classes/_langchain_langgraph.index.CompiledStateGraph.html#stream) method:
+Pass one or more of the following stream modes as a list to the [`stream`](https://reference.langchain.com/javascript/langchain-langgraph/index/CompiledStateGraph/stream) method:
 
 | Mode | Description |
 | :--- | :---------- |
@@ -1083,7 +1083,7 @@ Not all chat model integrations support the `streaming` parameter. If your model
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langgraph/streaming.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

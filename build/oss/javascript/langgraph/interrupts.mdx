@@ -91,7 +91,7 @@ await graph.invoke(new Command({ resume: true }), config);
 - You must use the **same thread ID** when resuming that was used when the interrupt occurred
 - The value passed to `new Command({ resume: ... })` becomes the return value of the [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) call
 - The node restarts from the beginning of the node where the [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) was called when resumed, so any code before the [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) runs again
-- You can pass any JSON-serializable value as the resume value
+- You can pass any JSON-serializable value as the resume value, subject to validation when you specify a Zod `responseSchema`
 
 <Warning>
 
@@ -100,6 +100,68 @@ await graph.invoke(new Command({ resume: true }), config);
 </Warning>
 
 
+
+## Define an interrupt response schema
+
+
+
+The `responseSchema` option to [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) describes the input expected when you resume the graph. Clients can use the schema to render typed input forms.
+
+<Note>
+Interrupt response schemas require `@langchain/langgraph` version 1.4.16 or later.
+</Note>
+
+Pass a Zod schema to validate resume values. LangGraph converts it to JSON Schema and includes it in `Interrupt.response_schema`, separately from the interrupt's `value` payload. The schema is available on interrupts returned to the caller and in checkpoint task interrupts.
+
+This example uses the approval schema from LangGraph's interrupt tests:
+
+```typescript
+import {
+  Annotation,
+  Command,
+  MemorySaver,
+  START,
+  StateGraph,
+  interrupt,
+} from "@langchain/langgraph";
+import { z } from "zod/v4";
+
+const Decision = z.object({
+  approved: z.boolean(),
+  note: z.string().default(""),
+});
+
+const State = Annotation.Root({
+  answer: Annotation<unknown>(),
+});
+
+const graph = new StateGraph(State)
+  .addNode("node", () => ({
+    answer: interrupt({ question: "approve?" }, { responseSchema: Decision }),
+  }))
+  .addEdge(START, "node")
+  .compile({ checkpointer: new MemorySaver() });
+
+const config = { configurable: { thread_id: "1" } };
+
+const result = await graph.invoke({ answer: null }, config);
+console.log(result.__interrupt__?.[0].response_schema);
+
+const resumed = await graph.invoke(
+  new Command({ resume: { approved: true } }),
+  config
+);
+console.log(resumed.answer);
+```
+
+With a Zod schema, `interrupt()` returns the parsed value. In this example, the result is `{ approved: true, note: "" }`, including the default `note`. Invalid input raises `ZodError`; you can retry with a corrected `new Command({ resume: ... })` using the same thread ID.
+
+You can also pass a JSON Schema object as `responseSchema`. LangGraph exposes that object unchanged but does **not** validate resume values against it. When you omit `responseSchema`, interrupts have no `response_schema` field, and resume values pass through without schema validation.
+
+
+Studio renders interrupt response schemas as typed input fields instead of a JSON editor. This preview of the Studio component uses example data with approval, note, and numeric amount fields.
+
+![Studio interrupt form with an approval toggle, a note field, and a numeric amount set to 125.50](/images/langgraph-interrupt-response-schema.png)
 
 ## Common patterns
 
@@ -453,9 +515,10 @@ This approach is useful when you want the approval logic to live with the tool i
       StateGraph,
       StateSchema,
       MessagesValue,
-      GraphNode,
       interrupt,
     } from "@langchain/langgraph";
+    import { ToolNode } from "@langchain/langgraph/prebuilt";
+    import { AIMessage } from "@langchain/core/messages";
     import * as z from "zod";
 
     const sendEmailTool = tool(
@@ -490,6 +553,7 @@ This approach is useful when you want the approval logic to live with the tool i
     );
 
     const model = new ChatAnthropic({ model: "claude-sonnet-4-6" }).bindTools([sendEmailTool]);
+    const toolNode = new ToolNode([sendEmailTool]);
 
     const State = new StateSchema({
       messages: MessagesValue,
@@ -501,10 +565,21 @@ This approach is useful when you want the approval logic to live with the tool i
       return { messages: [response] };
     };
 
+    const shouldContinue = (state: typeof State.State) => {
+      // Route to the tools node if the LLM made a tool call
+      const lastMessage = state.messages.at(-1);
+      if (AIMessage.isInstance(lastMessage) && lastMessage.tool_calls?.length) {
+        return "tools";
+      }
+      return END;
+    };
+
     const graphBuilder = new StateGraph(State)
       .addNode("agent", agent)
+      .addNode("tools", toolNode)
       .addEdge(START, "agent")
-      .addEdge("agent", END);
+      .addConditionalEdges("agent", shouldContinue, ["tools", END])
+      .addEdge("tools", "agent"); // Loop back after tools
 
     const checkpointer = new MemorySaver();
     const graph = graphBuilder.compile({ checkpointer });
@@ -539,7 +614,7 @@ Sometimes you need to validate input from humans and re-prompt if the value is i
 
 <Warning>
 
-**Avoid `while True` + `interrupt()` loops inside a single node.** Because the node re-runs from the beginning on every resume (see [Rules of interrupts](#rules-of-interrupts)), a loop that calls `interrupt()` multiple times causes each resume to replay all previous iterations: the first resume replays 1 iteration, the second replays 2, and so on. The result is exponential re-execution of any code inside the loop body.
+**Avoid `while True` + `interrupt()` loops inside a single node.** Because the node re-runs from the beginning on every resume (see [Rules of interrupts](#rules-of-interrupts)), a loop that calls `interrupt()` multiple times causes each resume to replay all previous iterations: the first resume replays 1 iteration, the second replays 2, and so on.
 
 </Warning>
 
@@ -554,7 +629,7 @@ The correct pattern:
 
 <LanggraphInterruptsValidateConditionalEdgePatternJs />
 
-Each resume invokes `getAgeNode` exactly once, runs the `interrupt()` call once, and exits. When the answer is invalid, the conditional edge loops back and the next interrupt re-prompts with the updated question.
+In this example, an invalid answer causes the node to return the updated question. During the same graph run, the conditional edge invokes the node again, and this new invocation pauses at `interrupt()`. On a later resume, the node still restarts from the beginning, so any code before `interrupt()` runs again. See [Rules of interrupts](#rules-of-interrupts).
 
 
 
@@ -821,6 +896,8 @@ As an example, you might have an API call to update a record inside of a node. I
 * ✅ Place side effects after [`interrupt`](https://reference.langchain.com/javascript/langchain-langgraph/index/interrupt) calls
 * ✅ Separate side effects into separate nodes when possible
 
+In the post-approval examples below, side effects run only when approval succeeds. If a node fails after committing a side effect but before completing, retrying the node can repeat the effect. Use idempotent operations or deduplicate writes in the external system.
+
 
 
 <CodeGroup>
@@ -841,7 +918,7 @@ const nodeA: GraphNode<typeof State> = async (state) => {
 ```typescript Side effects after interrupt
 const nodeA: GraphNode<typeof State> = async (state) => {
   // ✅ Good: placing side effect after the interrupt
-  // This ensures it only runs once after approval is received
+  // Approval gates this side effect; retries still need idempotency
   const approved = interrupt("Approve this change?");
 
   if (approved) {
@@ -864,7 +941,7 @@ const approvalNode: GraphNode<typeof State> = async (state) => {
 
 const notificationNode: GraphNode<typeof State> = async (state) => {
   // ✅ Good: side effect happens in a separate node
-  // This runs after approval, so it only executes once
+  // Approval gates this side effect; retries still need idempotency
   if (state.approved) {
     await sendNotification({
       userId: state.userId,
@@ -1015,7 +1092,7 @@ You can use [LangSmith Studio](/langsmith/studio) to set static interrupts in yo
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langgraph/interrupts.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

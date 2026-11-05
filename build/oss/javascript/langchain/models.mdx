@@ -1,5 +1,8 @@
 ---
 title: Models
+description: Initialize and configure chat models, the reasoning engine of LangChain agents, with support for tool calling, structured output, and multimodal inputs.
+keywords: ["init_chat_model", "initChatModel", "chat model", "chat models", "LLM", "model provider"]
+boost: 2
 ---
 
 import ChatModelTabsPy from '/snippets/javascript/chat-model-tabs.mdx';
@@ -127,10 +130,9 @@ LangChain chat models automatically retry failed API requests with exponential b
 You can adjust `maxRetries` and `timeout` when creating a model, then pass that instance to `createAgent`, `createDeepAgent`, or call it standalone:
 
 ```typescript
-import { ChatAnthropic } from "@langchain/anthropic";
+import { initChatModel } from "langchain";
 
-const model = new ChatAnthropic({
-  model: "google_genai:gemini-3.6-flash",
+const model = await initChatModel("google:gemini-3.6-flash", {
   maxRetries: 10, // Increase for unreliable networks (default: 6)
   timeout: 120_000, // Milliseconds; increase for slow connections
 });
@@ -157,7 +159,7 @@ A chat model must be invoked to generate an output. There are three primary invo
 
 ### Invoke
 
-The most straightforward way to call a model is to use [`invoke()`](https://reference.langchain.com/javascript/classes/_langchain_core.language_models_chat_models.BaseChatModel.html#invoke) with a single message or a list of messages.
+The most straightforward way to call a model is to use [`invoke()`](https://reference.langchain.com/javascript/langchain-core/language_models/chat_models/BaseChatModel/invoke) with a single message or a list of messages.
 
 
 
@@ -207,7 +209,7 @@ console.log(response);  // AIMessage("J'adore créer des applications.")
 
 Most models can stream their output content while it is being generated. By displaying output progressively, streaming significantly improves user experience, particularly for longer responses.
 
-Calling [`stream()`](https://reference.langchain.com/javascript/classes/_langchain_core.language_models_chat_models.BaseChatModel.html#stream) returns an <Tooltip tip="An object that progressively provides access to each item of a collection, in order.">iterator</Tooltip> that yields output chunks as they are produced. You can use a loop to process each chunk in real-time:
+Calling [`stream()`](https://reference.langchain.com/javascript/langchain-core/language_models/chat_models/BaseChatModel/stream) returns an <Tooltip tip="An object that progressively provides access to each item of a collection, in order.">iterator</Tooltip> that yields output chunks as they are produced. You can use a loop to process each chunk in real-time:
 
 
 <CodeGroup>
@@ -301,7 +303,7 @@ The resulting message can be treated the same as a message that was generated wi
         Full message: Hi there! How can I help today?
         ```
 
-        See the [`streamEvents()`](https://reference.langchain.com/javascript/classes/_langchain_core.language_models_chat_models.BaseChatModel.html#streamEvents) reference for event types and other details.
+        See the [`streamEvents()`](https://reference.langchain.com/javascript/langchain-core/language_models/chat_models/BaseChatModel/streamEvents) reference for event types and other details.
 
     </Accordion>
     <Accordion title='"Auto-streaming" chat models'>
@@ -311,7 +313,7 @@ The resulting message can be treated the same as a message that was generated wi
 
         #### How it works
 
-        When you `invoke()` a chat model, LangChain will automatically switch to an internal streaming mode if it detects that you are trying to stream the overall application. The result of the invocation will be the same as far as the code that was using invoke is concerned; however, while the chat model is being streamed, LangChain will take care of invoking [`on_llm_new_token`](https://reference.langchain.com/javascript/interfaces/_langchain_core.callbacks_base.BaseCallbackHandlerMethods.html#onLlmNewToken) events in LangChain's callback system.
+        When you `invoke()` a chat model, LangChain will automatically switch to an internal streaming mode if it detects that you are trying to stream the overall application. The result of the invocation will be the same as far as the code that was using invoke is concerned; however, while the chat model is being streamed, LangChain will take care of invoking [`on_llm_new_token`](https://reference.langchain.com/javascript/langchain-core/callbacks/base/BaseCallbackHandler/handleLLMNewToken) events in LangChain's callback system.
 
 
         Callback events allow LangGraph `stream()` and `streamEvents()` to surface the chat model's output in real-time.
@@ -354,7 +356,7 @@ for (const response of responses) {
     See the [`RunnableConfig`](https://reference.langchain.com/javascript/langchain-core/runnables/RunnableConfig) reference for a full list of supported attributes.
 </Tip>
 
-For more details on batching, see the [reference](https://reference.langchain.com/javascript/classes/_langchain_core.language_models_chat_models.BaseChatModel.html#batch).
+For more details on batching, see the [reference](https://reference.langchain.com/javascript/langchain-core/language_models/chat_models/BaseChatModel/batch).
 
 
 ---
@@ -400,7 +402,7 @@ sequenceDiagram
 
 
 
-To make tools that you have defined available for use by a model, you must bind them using [`bindTools`](https://reference.langchain.com/javascript/classes/_langchain_core.language_models_chat_models.BaseChatModel.html#bindTools). In subsequent invocations, the model can choose to call any of the bound tools as needed.
+To make tools that you have defined available for use by a model, you must bind them using [`bindTools`](https://reference.langchain.com/javascript/langchain-core/language_models/chat_models/BaseChatModel/bindTools). In subsequent invocations, the model can choose to call any of the bound tools as needed.
 
 
 Some model providers offer <Tooltip tip="Tools that are executed server-side, such as web search and code interpreters">built-in tools</Tooltip> that can be enabled via model or invocation parameters (e.g. [`ChatOpenAI`](/oss/javascript/integrations/chat/openai), [`ChatAnthropic`](/oss/javascript/integrations/chat/anthropic)). Check the respective [provider reference](/oss/javascript/integrations/providers/overview) for details.
@@ -453,7 +455,9 @@ Below, we show some common ways you can use tool calling.
 
         ```typescript Tool execution loop
         // Bind (potentially multiple) tools to the model
-        const modelWithTools = model.bindTools([get_weather])
+        const tools = [getWeather]
+        const toolsByName = Object.fromEntries(tools.map((tool) => [tool.name, tool]))
+        const modelWithTools = model.bindTools(tools)
 
         // Step 1: Model generates tool calls
         const messages = [{"role": "user", "content": "What's the weather in Boston?"}]
@@ -463,7 +467,8 @@ Below, we show some common ways you can use tool calling.
         // Step 2: Execute tools and collect results
         for (const tool_call of ai_msg.tool_calls) {
             // Execute the tool with the generated arguments
-            const tool_result = await get_weather.invoke(tool_call)
+            const tool = toolsByName[tool_call.name]
+            const tool_result = await tool.invoke(tool_call)
             messages.push(tool_result)
         }
 
@@ -496,7 +501,9 @@ Below, we show some common ways you can use tool calling.
 
 
         ```typescript Parallel tool calls
-        const modelWithTools = model.bind_tools([get_weather])
+        const tools = [getWeather]
+        const toolsByName = Object.fromEntries(tools.map((tool) => [tool.name, tool]))
+        const modelWithTools = model.bindTools(tools)
 
         const response = await modelWithTools.invoke(
             "What's the weather in Boston and Tokyo?"
@@ -514,10 +521,9 @@ Below, we show some common ways you can use tool calling.
         // Execute all tools (can be done in parallel with async)
         const results = []
         for (const tool_call of response.tool_calls || []) {
-            if (tool_call.name === 'get_weather') {
-                const result = await get_weather.invoke(tool_call)
-                results.push(result)
-            }
+            const tool = toolsByName[tool_call.name]
+            const result = await tool.invoke(tool_call)
+            results.push(result)
         }
         ```
 
@@ -691,7 +697,7 @@ Models can be requested to provide their response in a format matching a given s
     **Key considerations for structured output:**
 
     - **Method parameter**: Some providers support different methods (`'jsonSchema'`, `'functionCalling'`, `'jsonMode'`)
-    - **Include raw**: Use [`includeRaw: true`](https://reference.langchain.com/javascript/classes/_langchain_core.language_models_chat_models.BaseChatModel.html#withStructuredOutput) to get both the parsed output and the raw [`AIMessage`](https://reference.langchain.com/javascript/langchain-core/messages/AIMessage)
+    - **Include raw**: Use [`includeRaw: true`](https://reference.langchain.com/javascript/langchain-core/language_models/chat_models/BaseChatModel/withStructuredOutput) to get both the parsed output and the raw [`AIMessage`](https://reference.langchain.com/javascript/langchain-core/messages/AIMessage)
     - **Validation**: Zod and Standard Schema objects provide automatic validation, while JSON Schema requires manual validation
     - **Standard Schema**: Any schema library implementing the [Standard Schema](https://standardschema.dev/) spec is supported and validated at runtime
 
@@ -701,7 +707,7 @@ Models can be requested to provide their response in a format matching a given s
 
 <Accordion title="Example: Message output alongside parsed structure">
 
-It can be useful to return the raw [`AIMessage`](https://reference.langchain.com/javascript/langchain-core/messages/AIMessage) object alongside the parsed representation to access response metadata such as [token counts](#token-usage). To do this, set [`include_raw=True`](https://reference.langchain.com/javascript/classes/_langchain_core.language_models_chat_models.BaseChatModel.html#withStructuredOutput) when calling [`with_structured_output`](https://reference.langchain.com/javascript/classes/_langchain_core.language_models_chat_models.BaseChatModel.html#withStructuredOutput):
+It can be useful to return the raw [`AIMessage`](https://reference.langchain.com/javascript/langchain-core/messages/AIMessage) object alongside the parsed representation to access response metadata such as [token counts](#token-usage). To do this, set [`include_raw=True`](https://reference.langchain.com/javascript/langchain-core/language_models/chat_models/BaseChatModel/withStructuredOutput) when calling [`with_structured_output`](https://reference.langchain.com/javascript/langchain-core/language_models/chat_models/BaseChatModel/withStructuredOutput):
 
 
 
@@ -902,7 +908,7 @@ Many providers offer prompt caching features to reduce latency and cost on repea
 - **Provider-level explicit controls:** providers let you manually indicate cache points for greater control or to guarantee cost savings. These mirror the underlying provider/API behavior. Examples:
     - [`ChatOpenAI`](https://reference.langchain.com/javascript/langchain-openai/ChatOpenAI) (via `prompt_cache_key`)
     - Anthropic content-block [`cache_control`](/oss/javascript/integrations/chat/anthropic#prompt-caching)
-    - [Gemini](https://reference.langchain.com/python/integrations/langchain_google_genai/).
+    - [Gemini](https://reference.langchain.com/python/langchain-google-genai).
 
 
 <Warning>
@@ -1109,7 +1115,7 @@ For model configuration details, see [Models](/oss/javascript/langchain/models).
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/models.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

@@ -133,7 +133,7 @@ In production, use a checkpointer backed by a database:
 
   <Tip>
   **Setup**
-  To use `MongoDBSaver`, you will need a MongoDB cluster. Follow [this guide](https://www.mongodb.com/docs/guides/atlas/cluster/) to create a cluster if you don't already have one. For an agent-focused walkthrough, see [short-term memory with MongoDB Atlas](/oss/javascript/integrations/memory/mongodb-short-term-memory).
+  To use `MongoDBSaver`, you will need a MongoDB cluster. Follow [this guide](https://www.mongodb.com/docs/atlas/tutorial/deploy-free-tier-cluster/) to create a cluster if you don't already have one. For an agent-focused walkthrough, see [short-term memory with MongoDB Atlas](/oss/javascript/integrations/memory/mongodb-short-term-memory).
   </Tip>
 
   ```typescript
@@ -247,6 +247,7 @@ Once you compile a graph with a store, LangGraph automatically injects the store
 
 ```typescript
 import { StateGraph, StateSchema, MessagesValue, GraphNode, START } from "@langchain/langgraph";
+import { v7 as uuid7 } from "uuid";
 
 const State = new StateSchema({
   messages: MessagesValue,
@@ -266,7 +267,7 @@ const callModel: GraphNode<typeof State> = async (state, runtime) => {
   // ... Use memories in model call
 
   // Store a new memory
-  await runtime.store?.put(namespace, crypto.randomUUID(), { data: "User prefers dark mode" });
+  await runtime.store?.put(namespace, uuid7(), { data: "User prefers dark mode" });
 };
 
 const builder = new StateGraph(State)
@@ -335,6 +336,7 @@ In production, use a store backed by a database:
   import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
   import { PostgresStore } from "@langchain/langgraph-checkpoint-postgres/store";
 
+import { v7 as uuid7 } from "uuid";
   const State = new StateSchema({
     messages: MessagesValue,
   });
@@ -352,7 +354,7 @@ In production, use a store backed by a database:
     const lastMessage = state.messages.at(-1);
     if (lastMessage?.content?.toLowerCase().includes("remember")) {
       const memory = "User name is Bob";
-      await runtime.store?.put(namespace, crypto.randomUUID(), { data: memory });
+      await runtime.store?.put(namespace, uuid7(), { data: memory });
     }
 
     const response = await model.invoke([
@@ -398,6 +400,8 @@ In production, use a store backed by a database:
 </Accordion>
 
 <Accordion title="Example: using MongoDB store">
+
+
   ```
   npm install @langchain/langgraph-checkpoint-mongodb
   ```
@@ -411,6 +415,7 @@ In production, use a store backed by a database:
   import { MemorySaver, StateGraph, StateSchema, MessagesValue, GraphNode, START } from "@langchain/langgraph";
   import { MongoDBStore } from "@langchain/langgraph-checkpoint-mongodb";
 
+import { v7 as uuid7 } from "uuid";
   const State = new StateSchema({
     messages: MessagesValue,
   });
@@ -428,7 +433,7 @@ In production, use a store backed by a database:
     const lastMessage = state.messages.at(-1);
     if (lastMessage?.content?.toLowerCase().includes("remember")) {
       const memory = "User name is Bob";
-      await runtime.store?.put(namespace, crypto.randomUUID(), { data: memory });
+      await runtime.store?.put(namespace, uuid7(), { data: memory });
     }
 
     const response = await model.invoke([
@@ -539,9 +544,12 @@ const items = await store.search(["user_123", "memories"], {
           // Search based on user's last message
           const items = await runtime.store.search(
             ["user_123", "memories"],
-            { query: state.messages.at(-1)?.content, limit: 2 }
+            { query: state.messages.at(-1)?.content }
           );
-          const memories = items.map(item => item.value.text).join("\n");
+          const memories = items
+            .filter((item) => item.score != null && item.score > 0.2)
+            .map((item) => item.value.text)
+            .join("\n");
           const memoriesText = memories ? `## Memories of user\n${memories}` : "";
 
           const response = await model.invoke([
@@ -600,9 +608,12 @@ const items = await store.search(["user_123", "memories"], {
           // Search based on user's last message
           const items = await runtime.store.search(
             ["user_123", "memories"],
-            { query: state.messages.at(-1)?.content, limit: 2 }
+            { query: state.messages.at(-1)?.content }
           );
-          const memories = items.map(item => item.value.text).join("\n");
+          const memories = items
+            .filter((item) => item.score != null && item.score > 0.2)
+            .map((item) => item.value.text)
+            .join("\n");
           const memoriesText = memories ? `## Memories of user\n${memories}` : "";
 
           const response = await model.invoke([
@@ -631,7 +642,7 @@ const items = await store.search(["user_123", "memories"], {
       </Tab>
       <Tab title="MongoDB (auto embedding)">
         <Note>
-        Auto embedding requires MongoDB Atlas. MongoDB generates embeddings server-side via Voyage AI. See the [Automated Embedding documentation](https://www.mongodb.com/docs/atlas/atlas-vector-search/automated-embedding/) for more information.
+        Auto embedding requires MongoDB Atlas. MongoDB generates embeddings server-side via Voyage AI. See the [Automated Embedding documentation](https://www.mongodb.com/docs/vector-search/) for more information.
         </Note>
 
         ```typescript
@@ -666,9 +677,12 @@ const items = await store.search(["user_123", "memories"], {
           // MongoDB generates the query embedding server-side
           const items = await runtime.store.search(
             ["user_123", "memories"],
-            { query: state.messages.at(-1)?.content, limit: 2 }
+            { query: state.messages.at(-1)?.content }
           );
-          const memories = items.map(item => item.value.content).join("\n");
+          const memories = items
+            .filter((item) => item.score != null && item.score > 0.2)
+            .map((item) => item.value.content)
+            .join("\n");
           const memoriesText = memories ? `## Memories of user\n${memories}` : "";
 
           const response = await model.invoke([
@@ -701,7 +715,7 @@ const items = await store.search(["user_123", "memories"], {
 
 ## Manage short-term memory
 
-With [short-term memory](#add-short-term-memory) enabled, long conversations can exceed the LLM's context window. Common solutions are:
+With [short-term memory](#add-short-term-memory) enabled, a checkpointer persists graph state across turns within the same thread. The node that calls the model controls which data from state to include in the model input. Persisting state does not automatically send all of it to the model. Passing a long message history to the model can exceed its context window. Common solutions are:
 
 * [Trim messages](#trim-messages): Remove first or last N messages (before calling LLM)
 * [Delete messages](#delete-messages) from LangGraph state permanently
@@ -717,9 +731,11 @@ This allows the agent to keep track of the conversation without exceeding the LL
 Most LLMs have a maximum supported context window (denominated in tokens). One way to decide when to truncate messages is to count the tokens in the message history and truncate whenever it approaches that limit. If you're using LangChain, you can use the trim messages utility and specify the number of tokens to keep from the list, as well as the `strategy` (e.g., keep the last `maxTokens`) to use for handling the boundary.
 
 
+In the following example, the node passes a trimmed message list to the model without removing messages from state.
 
 
-To trim message history, use the [`trimMessages`](https://js.langchain.com/docs/how_to/trim_messages/) function:
+
+To trim message history, use the [`trimMessages`](https://reference.langchain.com/javascript/langchain-core/messages/trimMessages) function:
 
 ```typescript
 import { trimMessages } from "@langchain/core/messages";
@@ -758,7 +774,7 @@ const builder = new StateGraph(State)
     messages: MessagesValue,
   });
 
-  const model = new ChatAnthropic({ model: "claude-3-5-sonnet-20241022" });
+  const model = new ChatAnthropic({ model: "claude-sonnet-4-6" });
 
   const callModel: GraphNode<typeof State> = async (state) => {
     const messages = trimMessages(state.messages, {
@@ -839,7 +855,7 @@ When deleting messages, **make sure** that the resulting message history is vali
     messages: MessagesValue,
   });
 
-  const model = new ChatAnthropic({ model: "claude-3-5-sonnet-20241022" });
+  const model = new ChatAnthropic({ model: "claude-sonnet-4-6" });
 
   const deleteMessages: GraphNode<typeof State> = (state) => {
     const messages = state.messages;
@@ -976,6 +992,7 @@ const summarizeConversation: GraphNode<typeof State> = async (state) => {
   } from "@langchain/langgraph";
   import * as z from "zod";
 
+import { v7 as uuid7 } from "uuid";
   const memory = new MemorySaver();
 
   // We will add a `summary` attribute (in addition to `messages` key)
@@ -994,7 +1011,7 @@ const summarizeConversation: GraphNode<typeof State> = async (state) => {
     let { messages } = state;
     if (summary) {
       const systemMessage = new SystemMessage({
-        id: crypto.randomUUID(),
+        id: uuid7(),
         content: `Summary of conversation earlier: ${summary}`,
       });
       messages = [systemMessage, ...messages];
@@ -1031,7 +1048,7 @@ const summarizeConversation: GraphNode<typeof State> = async (state) => {
 
     const allMessages = [
       ...messages,
-      new HumanMessage({ id: crypto.randomUUID(), content: summaryMessage }),
+      new HumanMessage({ id: uuid7(), content: summaryMessage }),
     ];
 
     const response = await model.invoke(allMessages);
@@ -1156,7 +1173,7 @@ We recommend running migrations as a dedicated deployment step, or you can ensur
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langgraph/add-memory.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

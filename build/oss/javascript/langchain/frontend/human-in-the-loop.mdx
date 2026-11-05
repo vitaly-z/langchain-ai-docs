@@ -14,6 +14,13 @@ durable. A user can refresh the page, a reviewer can answer from a different
 component, and the agent still resumes from the exact point where execution
 stopped instead of replaying the whole run.
 
+
+
+<Note>
+This page uses the default batched interrupt mode. For per-call interrupts (`interruptMode: "per_call"`), see [Pause once per tool call](/oss/javascript/langchain/human-in-the-loop#pause-once-per-tool-call).
+</Note>
+
+
 import { PatternEmbed } from "/snippets/pattern-embed.jsx"
 import UseStreamTypeInference from '/snippets/javascript/oss/use-stream-type-inference.mdx';
 
@@ -596,7 +603,7 @@ Keep these guidelines in mind when implementing HITL workflows:
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/frontend/human-in-the-loop.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

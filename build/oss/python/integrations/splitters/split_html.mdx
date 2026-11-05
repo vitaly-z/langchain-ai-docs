@@ -584,7 +584,7 @@ Since our function is called when the tag is discovered, we can override the `<i
 ```python
 """This example assumes you have helper methods `load_image_from_url` and an LLM agent `llm` that can process image data."""
 
-from langchain.agents import AgentExecutor
+from langchain_classic.agents import AgentExecutor
 
 # This example needs to be replaced with your own agent
 llm = AgentExecutor(...)
@@ -656,7 +656,7 @@ With our custom handler written to extract the specific fields from a `<img>` el
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/splitters/split_html.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

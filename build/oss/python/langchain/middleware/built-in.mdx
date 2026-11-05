@@ -5,7 +5,11 @@ description: Prebuilt middleware for common agent use cases
 
 import RubricConfigurePy from '/snippets/python/code-samples/rubric-configure-py.mdx';
 
-LangChain and [Deep Agents](/oss/python/deepagents/overview) provide prebuilt middleware for common use cases. Each middleware is production-ready and configurable for your specific needs.
+LangChain provides prebuilt middleware for common use cases. Each middleware is production-ready and configurable for your specific needs.
+
+<Note>
+Using [Deep Agents](/oss/python/deepagents/overview) (`create_deep_agent` / `createDeepAgent`)? Middleware is added through the [customization](/oss/python/deepagents/customization#middleware) API instead.
+</Note>
 
 ## Provider-agnostic middleware
 
@@ -46,7 +50,7 @@ Catch exceptions raised during tool execution and convert them into error `ToolM
 - Preventing unexpected tool exceptions from crashing the agent.
 
 <Note>
-Tool error middleware does not automatically retry failed calls. For retries, compose with [Tool retry](#tool-retry) middleware placed *inner* (earlier in the `middleware` list) and configured with `on_failure="error"` so that exceptions reach the tool error middleware. See the [full example](#tool-error-full-example) below.
+Tool error middleware does not automatically retry failed calls. For retries, compose with [Tool retry](#tool-retry) middleware placed *inner* (later in the `middleware` list) and configured with `on_failure="error"` so that exceptions reach the tool error middleware. See the [full example](#tool-error-full-example) below.
 </Note>
 
 **API reference:** [`ToolErrorMiddleware`](https://reference.langchain.com/python/langchain/agents/middleware/tool_error/ToolErrorMiddleware)
@@ -118,8 +122,8 @@ agent = create_agent(
     tools=[search_tool, database_tool],
     middleware=[
         # Place retry inner so exceptions reach ToolErrorMiddleware after retries are exhausted
-        ToolRetryMiddleware(max_retries=3, on_failure="error"),
         ToolErrorMiddleware(on_error=on_error, tools=["search_tool"]),
+        ToolRetryMiddleware(max_retries=3, on_failure="error"),
     ],
 )
 
@@ -429,7 +433,7 @@ agent = create_agent(
     middleware=[
         ModelFallbackMiddleware(
             "gpt-5.4-mini",
-            "claude-3-5-sonnet-20241022",
+            "claude-sonnet-4-6",
         ),
     ],
 )
@@ -677,6 +681,10 @@ Pause agent execution for human approval, editing, or rejection of tool calls be
 - Long-running conversations where human feedback guides the agent.
 
 **API reference:** [`HumanInTheLoopMiddleware`](https://reference.langchain.com/python/langchain/agents/middleware/human_in_the_loop/HumanInTheLoopMiddleware)
+
+The middleware pauses once per model turn by default. Set `interrupt_mode="per_call"` to pause once per tool call, with each interrupt answered by its ID. See [Set the interrupt mode](/oss/python/langchain/human-in-the-loop#set-the-interrupt-mode).
+
+
 
 
 <Warning>
@@ -1868,7 +1876,7 @@ These middleware are optimized for specific LLM providers. See each provider's d
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/middleware/built-in.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

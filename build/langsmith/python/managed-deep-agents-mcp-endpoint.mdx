@@ -109,19 +109,19 @@ Load the agent's tool through an MCP client library, then pass the tools to a mo
 ```python
 import os
 
-from langchain_mcp_adapters.client import MultiServerMCPClient
+from fastmcp.client import Client
+from fastmcp.client.transports import StreamableHttpTransport
+from langchain.mcp import MCPAdapter
 
-client = MultiServerMCPClient(
-    {
-        "research-assistant": {
-            "transport": "streamable_http",
-            "url": "<DEPLOYMENT_API_URL>/mcp",
-            "headers": {"x-api-key": os.environ["LANGSMITH_API_KEY"]},
-        }
-    }
-)
-
-tools = await client.get_tools()
+async with MCPAdapter(
+    Client(
+        StreamableHttpTransport(
+            "<DEPLOYMENT_API_URL>/mcp",
+            headers={"x-api-key": os.environ["LANGSMITH_API_KEY"]},
+        )
+    )
+) as adapter:
+    tools = await adapter.list_tools()
 ```
 
 
@@ -131,7 +131,7 @@ Read credentials from the environment. Do not hard-code them in client code.
 
 ## Understand session behavior
 
-Agent Server MCP requests are [stateless](/langsmith/server-mcp#session-behavior): separate calls do not share thread state.
+Agent Server MCP requests do not use [sessions](/langsmith/server-mcp#session-behavior): separate tool calls do not share thread state. A tool call that pauses for input keeps its own state until the client answers. For more information, see [Human-in-the-loop over MCP](/langsmith/server-mcp-elicitation).
 
 To retain knowledge across calls, [opt in to durable memory](/langsmith/python/managed-deep-agents-memory). Durable memory is optional and shared by every caller of the deployment. Do not enable it when MCP clients should not influence one another.
 
@@ -164,7 +164,7 @@ To retain knowledge across calls, [opt in to durable memory](/langsmith/python/m
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/managed-deep-agents-mcp-endpoint.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

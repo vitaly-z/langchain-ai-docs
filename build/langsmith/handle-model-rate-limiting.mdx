@@ -43,7 +43,7 @@ If you're using `langchain` components you can add retries to all model calls wi
 <CodeGroup>
 
 ```python Python
-from langchain import init_chat_model
+from langchain.chat_models import init_chat_model
 
 model_with_retry = init_chat_model("gpt-5.4-mini").with_retry(stop_after_attempt=6)
 ```
@@ -68,7 +68,7 @@ If you're not using `langchain` you can use other libraries like `tenacity` (Pyt
 
 ## Limiting `max_concurrency`
 
-Limiting the number of concurrent calls you're making to your application and evaluators is another way to decrease the frequency of model calls you're making, and in that way avoid rate limit errors. `max_concurrency` can be set directly on the [evaluate()](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._runner.evaluate) / [aevaluate()](https://docs.smith.langchain.com/reference/python/evaluation/langsmith.evaluation._arunner.aevaluate) functions. This parallelizes evaluation by effectively splitting the dataset across threads.
+Limiting the number of concurrent calls you're making to your application and evaluators is another way to decrease the frequency of model calls you're making, and in that way avoid rate limit errors. `max_concurrency` can be set directly on the [evaluate()](https://reference.langchain.com/python/langsmith/evaluation/_runner/evaluate) / [aevaluate()](https://reference.langchain.com/python/langsmith/evaluation/_arunner/aevaluate) functions. This parallelizes evaluation by effectively splitting the dataset across threads.
 
 <CodeGroup>
 
@@ -96,7 +96,7 @@ await evaluate(..., {
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/handle-model-rate-limiting.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

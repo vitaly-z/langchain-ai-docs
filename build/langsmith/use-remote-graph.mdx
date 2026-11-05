@@ -183,6 +183,10 @@ By default, graph runs (for example, calls made with `.invoke()` or `.stream()`)
 
 If you want to preserve the outputs of a run—for example, to support human-in-the-loop workflows—you can create a thread and pass its ID through the `config` argument. This works the same way as with a regular compiled graph:
 
+<Note>
+`RemoteGraph` sends only `recursion_limit`, `tags`, `metadata`, and `configurable` from the config to the deployment, and sends `thread_id` from `configurable` as the run's thread. It drops `run_id` and `run_name`, so you cannot set a custom run ID or run name. Agent Server assigns the run ID.
+</Note>
+
 <CodeGroup>
 
 ```python Python
@@ -307,7 +311,7 @@ for await (const chunk of await graph.stream({
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/use-remote-graph.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

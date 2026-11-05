@@ -269,6 +269,7 @@ Legacy functionality has moved to [`@langchain/classic`](https://www.npmjs.com/p
 
 - Legacy chains and chain implementations
 - Retrievers
+- Output parsers that repair malformed model output (e.g. `OutputFixingParser`)
 - The indexing API
 - [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) exports
 - Other deprecated functionality
@@ -298,6 +299,9 @@ import { ... } from "@langchain/classic"; // [!code ++]
 
 import { ... } from "langchain/chains"; // [!code --]
 import { ... } from "@langchain/classic/chains"; // [!code ++]
+
+import { OutputFixingParser } from "langchain/output_parsers"; // [!code --]
+import { OutputFixingParser } from "@langchain/classic/output_parsers"; // [!code ++]
 ```
 
 ## Reporting issues
@@ -336,7 +340,7 @@ Please report any issues discovered with 1.0 on [GitHub](https://github.com/lang
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/javascript/releases/langchain-v1.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

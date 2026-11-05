@@ -181,7 +181,7 @@ The middleware caches content up to and including the latest message in each req
 3. This pattern continues for each turn, with each request reusing the cached conversation history
 
 <Note>
-    Prompt caching reduces API costs by caching tokens, but does **not** provide conversation memory. To persist conversation history across invocations, use a [checkpointer](https://langchain-ai.github.io/langgraph/concepts/persistence/#checkpointer-libraries) like `MemorySaver`.
+    Prompt caching reduces API costs by caching tokens, but does **not** provide conversation memory. To persist conversation history across invocations, use a [checkpointer](/oss/python/langgraph/checkpointers#checkpointer-libraries) like `MemorySaver`.
 </Note>
 
 ```python
@@ -822,7 +822,7 @@ Is there anything specific about these deadlines you'd like to know or update?
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/python/integrations/middleware/anthropic.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

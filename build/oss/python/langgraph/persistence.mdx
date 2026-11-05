@@ -67,9 +67,8 @@ When using `PostgresSaver` (or `AsyncPostgresSaver`), the `thread_id` is stored 
 **Fix:** Keep `thread_id` values under 255 characters. Use a UUID or hash if you need deterministic IDs:
 
 ```python
-import uuid
-
-config = {"configurable": {"thread_id": str(uuid.uuid4())[:255]}}
+from langchain_core.utils.uuid import uuid7
+config = {"configurable": {"thread_id": str(uuid7())[:255]}}
 ```
 
 
@@ -112,7 +111,7 @@ When a subgraph updates state, the parent graph may not see the changes immediat
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langgraph/persistence.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

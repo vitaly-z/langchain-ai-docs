@@ -5,7 +5,11 @@ description: Prebuilt middleware for common agent use cases
 
 import RubricConfigurePy from '/snippets/javascript/code-samples/rubric-configure-py.mdx';
 
-LangChain and [Deep Agents](/oss/javascript/deepagents/overview) provide prebuilt middleware for common use cases. Each middleware is production-ready and configurable for your specific needs.
+LangChain provides prebuilt middleware for common use cases. Each middleware is production-ready and configurable for your specific needs.
+
+<Note>
+Using [Deep Agents](/oss/javascript/deepagents/overview) (`create_deep_agent` / `createDeepAgent`)? Middleware is added through the [customization](/oss/javascript/deepagents/customization#middleware) API instead.
+</Note>
 
 ## Provider-agnostic middleware
 
@@ -431,7 +435,7 @@ const agent = createAgent({
   middleware: [
     modelFallbackMiddleware(
       "gpt-5.4-mini",
-      "claude-3-5-sonnet-20241022"
+      "claude-sonnet-4-6"
     ),
   ],
 });
@@ -646,6 +650,9 @@ Pause agent execution for human approval, editing, or rejection of tool calls be
 - Compliance workflows where human oversight is mandatory.
 - Long-running conversations where human feedback guides the agent.
 
+
+
+The middleware pauses once per model turn by default. Set `interruptMode: "per_call"` to pause once per tool call, with each interrupt answered by its ID. See [Set the interrupt mode](/oss/javascript/langchain/human-in-the-loop#set-the-interrupt-mode).
 
 
 <Warning>
@@ -1501,7 +1508,7 @@ const agent = createAgent({
 </ParamField>
 
 <ParamField body="model" type="string | BaseChatModel">
-    Model to use for generating emulated tool responses. Can be a model identifier string (e.g., `'google_genai:gemini-3.6-flash'`) or a `BaseChatModel` instance. Defaults to the agent's model if not specified.
+    Model to use for generating emulated tool responses. Can be a model identifier string (e.g., `'google:gemini-3.6-flash'`) or a `BaseChatModel` instance. Defaults to the agent's model if not specified.
 </ParamField>
 
 
@@ -1604,7 +1611,7 @@ These middleware are optimized for specific LLM providers. See each provider's d
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/middleware/built-in.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

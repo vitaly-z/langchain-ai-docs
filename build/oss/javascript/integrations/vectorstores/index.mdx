@@ -111,10 +111,10 @@ Filtering by metadata (e.g., source, date) can refine search results:
 vectorStore.similaritySearch("query", 2, { source: "tweets" });
 ```
 
-<important>
+<Note>
 Support for metadata-based filtering varies between implementations.
 Check the documentation of your chosen vector store for details.
-</important>
+</Note>
 
 ## Top integrations
 
@@ -260,7 +260,7 @@ Instantiate the model:
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 
 const embeddings = new GoogleGenerativeAIEmbeddings({
-  model: "text-embedding-004"
+  model: "gemini-embedding-001"
 });
 ```
 
@@ -690,7 +690,7 @@ LangChain.js integrates with a variety of vector stores. You can check out a ful
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/javascript/integrations/vectorstores/index.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).

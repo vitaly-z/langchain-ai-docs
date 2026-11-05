@@ -115,6 +115,10 @@ Middleware can read per-run context through the normal LangChain runtime APIs. U
 
 For examples, see [Custom middleware](/oss/python/langchain/middleware/custom).
 
+For the caller, channel, and sandbox fields that Managed Deep Agents adds, see [Runtime](/langsmith/python/managed-deep-agents-runtime).
+
+To read or write files in the thread's sandbox from a middleware hook, use `runtime.backend`. See [Read and write sandbox files from code](/langsmith/python/managed-deep-agents-sandboxes#read-and-write-sandbox-files-from-code).
+
 ## Deployment
 
 `mda dev` and `mda deploy` copy project files into the compiled build, including modules under `middleware/`. Middleware is not synced to Context Hub; it ships with the agent code.
@@ -133,7 +137,7 @@ For more information, see [Project structure](/langsmith/python/managed-deep-age
 
 <div className="source-links">
 <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](/use-these-docs) to your agent of choice via MCP for real-time answers.
 </Callout>
 <Callout icon="edit">
     [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/langsmith/managed-deep-agents-middleware.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
